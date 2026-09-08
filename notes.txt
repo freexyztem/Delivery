@@ -1,0 +1,42 @@
+❯ cat requirements.txt
+asgiref==3.12.1
+Django==6.1.1
+django-cors-headers==4.9.0
+djangorestframework==3.18.0
+sqlparse==0.6.0
+❯ python --version
+Python 3.12.3
+❯ pip --version
+pip 26.2.1 from /mnt/d/DELIVERY/venv/lib/python3.12/site-packages/pip (python 3.12)
+❯ django-admin --version
+6.1.1
+❯ node --version
+v24.19.0
+❯ npm --version
+11.17.0
+❯ git --version
+git version 2.43.0
+❯ cd backend
+python manage.py check
+System check identified no issues (0 silenced).
+
+ENVIOS:
+{
+    "viaje": 1,
+    "producto": 1,
+    "peso": "5.00",
+    "tarifa": 2,
+    "gastos_empresa": "8.00",
+    "extra_fee": "5.00",
+    "precio_fijo": "0.00"
+}
+
+ENDPOINTS:
+/api/usuarios/
+/api/tarifas/
+/api/clientes/
+/api/viajes/
+/api/participantes/
+/api/productos/
+/api/envios/
+/api/me/
