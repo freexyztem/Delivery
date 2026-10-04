@@ -1,26 +1,10 @@
 export const API_URL = "https://delivery-r9p0.onrender.com/api/";
 
 
-// Paso 2 - Conectar tipo de usuario
-export async function conectarTipoUsuario(accessToken: string): Promise<string> {
-  const response = await fetch(`${API_URL}usuario/`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-  });
+// ============================================================
+// TIPOS
+// ============================================================
 
-  if (!response.ok) {
-    throw new Error("No se pudo obtener el tipo de usuario");
-  }
-
-  const data = await response.json();
-
-  return data.rol;
-}
-
-// FASE 3 - Pedir Productos de Viajes (envios, productos y viajes)
 export interface Envio {
   id: number;
   viaje: number;
@@ -40,12 +24,14 @@ export interface Envio {
   creado_en: string;
   actualizado_en: string;
 }
+
 export interface Viaje {
   id: number;
   nombre: string;
   fecha: string;
   creado_en: string;
 }
+
 export interface Producto {
   id: number;
   nombre: string;
@@ -54,16 +40,144 @@ export interface Producto {
   categoria: string;
   creado_en: string;
 }
-//------------ENVIOS
-export async function obtenerEnvios(
-  accessToken: string
-): Promise<Envio[]> {
 
-  const response = await fetch(`${API_URL}envios/`, {
+
+// ============================================================
+// REFRESH ACCESS TOKEN
+// ============================================================
+
+export async function refreshAccessToken(): Promise<string> {
+
+  const response = await fetch(`${API_URL}token/refresh/`, {
+    method: "POST",
+
+    // Permite enviar la cookie HttpOnly
+    credentials: "include",
+
     headers: {
-      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
     },
   });
+
+  if (!response.ok) {
+    throw new Error("La sesión ha expirado");
+  }
+
+  const data = await response.json();
+
+  return data.access;
+}
+
+
+// ============================================================
+// FETCH AUTENTICADO
+// ============================================================
+
+export async function fetchWithAuth(
+  url: string,
+  accessToken: string,
+  onRefreshToken: (accessToken: string) => void
+): Promise<Response> {
+
+  // ----------------------------------------------------------
+  // PRIMER INTENTO
+  // ----------------------------------------------------------
+
+  let response = await fetch(url, {
+    method: "GET",
+
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+
+    credentials: "include",
+  });
+
+
+  // ----------------------------------------------------------
+  // ACCESS TOKEN TODAVÍA ES VÁLIDO
+  // ----------------------------------------------------------
+
+  if (response.status !== 401) {
+    return response;
+  }
+
+
+  // ----------------------------------------------------------
+  // ACCESS TOKEN EXPIRÓ
+  // ----------------------------------------------------------
+
+  console.log("Access token expirado. Intentando renovar...");
+
+  const newAccessToken = await refreshAccessToken();
+
+
+  // ----------------------------------------------------------
+  // GUARDAR EL NUEVO TOKEN EN APP.TSX
+  // ----------------------------------------------------------
+
+  onRefreshToken(newAccessToken);
+
+
+  // ----------------------------------------------------------
+  // SEGUNDO INTENTO CON EL NUEVO TOKEN
+  // ----------------------------------------------------------
+
+  response = await fetch(url, {
+    method: "GET",
+
+    headers: {
+      Authorization: `Bearer ${newAccessToken}`,
+      "Content-Type": "application/json",
+    },
+
+    credentials: "include",
+  });
+
+  return response;
+}
+
+
+// ============================================================
+// CONECTAR TIPO DE USUARIO
+// ============================================================
+
+export async function conectarTipoUsuario(
+  accessToken: string,
+  onRefreshToken: (accessToken: string) => void
+): Promise<string> {
+
+  const response = await fetchWithAuth(
+    `${API_URL}usuario/`,
+    accessToken,
+    onRefreshToken
+  );
+
+  if (!response.ok) {
+    throw new Error("No se pudo obtener el tipo de usuario");
+  }
+
+  const data = await response.json();
+
+  return data.rol;
+}
+
+
+// ============================================================
+// OBTENER ENVIOS
+// ============================================================
+
+export async function obtenerEnvios(
+  accessToken: string,
+  onRefreshToken: (accessToken: string) => void
+): Promise<Envio[]> {
+
+  const response = await fetchWithAuth(
+    `${API_URL}envios/`,
+    accessToken,
+    onRefreshToken
+  );
 
   if (!response.ok) {
     throw new Error("No se pudieron obtener los envíos");
@@ -71,16 +185,22 @@ export async function obtenerEnvios(
 
   return response.json();
 }
-//------------VIAJES
+
+
+// ============================================================
+// OBTENER VIAJES
+// ============================================================
+
 export async function obtenerViajes(
-  accessToken: string
+  accessToken: string,
+  onRefreshToken: (accessToken: string) => void
 ): Promise<Viaje[]> {
 
-  const response = await fetch(`${API_URL}viajes/`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
+  const response = await fetchWithAuth(
+    `${API_URL}viajes/`,
+    accessToken,
+    onRefreshToken
+  );
 
   if (!response.ok) {
     throw new Error("No se pudieron obtener los viajes");
@@ -88,16 +208,22 @@ export async function obtenerViajes(
 
   return response.json();
 }
-//------------PRODUCTOS
+
+
+// ============================================================
+// OBTENER PRODUCTOS
+// ============================================================
+
 export async function obtenerProductos(
-  accessToken: string
+  accessToken: string,
+  onRefreshToken: (accessToken: string) => void
 ): Promise<Producto[]> {
 
-  const response = await fetch(`${API_URL}productos/`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
+  const response = await fetchWithAuth(
+    `${API_URL}productos/`,
+    accessToken,
+    onRefreshToken
+  );
 
   if (!response.ok) {
     throw new Error("No se pudieron obtener los productos");
@@ -105,8 +231,3 @@ export async function obtenerProductos(
 
   return response.json();
 }
-
-function refreshAccessToken() {
-  // Implementation for refreshing access token
-}
-

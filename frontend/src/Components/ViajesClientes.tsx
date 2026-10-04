@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+
 import {
   obtenerEnvios,
   obtenerViajes,
@@ -7,12 +8,18 @@ import {
   type Viaje,
   type Producto,
 } from "../Services/api";
+
+
 // ============================================================
 // PROPS
 // ============================================================
 
 interface ViajesClientesProps {
   accessToken: string;
+
+  onRefreshToken: (
+    accessToken: string
+  ) => void;
 }
 
 
@@ -22,6 +29,7 @@ interface ViajesClientesProps {
 
 function ViajesClientes({
   accessToken,
+  onRefreshToken,
 }: ViajesClientesProps) {
 
   const [envios, setEnvios] = useState<Envio[]>([]);
@@ -45,19 +53,35 @@ function ViajesClientes({
         setCargando(true);
         setError("");
 
+
         const [
           enviosData,
           viajesData,
           productosData,
         ] = await Promise.all([
-          obtenerEnvios(accessToken),
-          obtenerViajes(accessToken),
-          obtenerProductos(accessToken),
+
+          obtenerEnvios(
+            accessToken,
+            onRefreshToken
+          ),
+
+          obtenerViajes(
+            accessToken,
+            onRefreshToken
+          ),
+
+          obtenerProductos(
+            accessToken,
+            onRefreshToken
+          ),
+
         ]);
+
 
         setEnvios(enviosData);
         setViajes(viajesData);
         setProductos(productosData);
+
 
       } catch (error) {
 
@@ -67,6 +91,7 @@ function ViajesClientes({
           "No se pudieron cargar los datos."
         );
 
+
       } finally {
 
         setCargando(false);
@@ -75,9 +100,15 @@ function ViajesClientes({
 
     }
 
-    cargarDatos();
 
-  }, [accessToken]);
+    if (accessToken) {
+      cargarDatos();
+    }
+
+  }, [
+    accessToken,
+    onRefreshToken,
+  ]);
 
 
   // ==========================================================
@@ -85,11 +116,19 @@ function ViajesClientes({
   // ==========================================================
 
   if (cargando) {
+
     return (
+
       <section>
-        <p>Cargando tus viajes...</p>
+
+        <p>
+          Cargando tus viajes...
+        </p>
+
       </section>
+
     );
+
   }
 
 
@@ -98,11 +137,19 @@ function ViajesClientes({
   // ==========================================================
 
   if (error) {
+
     return (
+
       <section>
-        <p>{error}</p>
+
+        <p>
+          {error}
+        </p>
+
       </section>
+
     );
+
   }
 
 
@@ -117,7 +164,9 @@ function ViajesClientes({
     ) => {
 
       if (!grupos[envio.viaje]) {
+
         grupos[envio.viaje] = [];
+
       }
 
       grupos[envio.viaje].push(envio);
@@ -134,9 +183,13 @@ function ViajesClientes({
   // ==========================================================
 
   return (
+
     <section>
 
-      <h1>Mis viajes</h1>
+      <h1>
+        Mis viajes
+      </h1>
+
 
       {Object.entries(enviosPorViaje).map(
         ([viajeId, enviosDelViaje]) => {
@@ -147,15 +200,19 @@ function ViajesClientes({
           );
 
 
-          // Si por alguna razón el viaje no existe
-          // en /viajes/, no mostramos este grupo.
+          // Si por alguna razón el viaje
+          // no existe en /viajes/, no mostramos
+          // este grupo.
 
           if (!viaje) {
+
             return null;
+
           }
 
 
           return (
+
             <article
               key={viaje.id}
               className="viaje"
@@ -196,11 +253,14 @@ function ViajesClientes({
 
 
                     if (!producto) {
+
                       return null;
+
                     }
 
 
                     return (
+
                       <article
                         key={envio.id}
                         className="producto"
@@ -214,6 +274,7 @@ function ViajesClientes({
                           {producto.nombre}
                         </h3>
 
+
                         <p>
                           Categoría:{" "}
                           {producto.categoria}
@@ -221,9 +282,11 @@ function ViajesClientes({
 
 
                         {producto.descripcion && (
+
                           <p>
                             {producto.descripcion}
                           </p>
+
                         )}
 
 
@@ -235,24 +298,29 @@ function ViajesClientes({
                           SKU: {envio.sku}
                         </p>
 
+
                         <p>
                           Peso: {envio.peso} lb
                         </p>
+
 
                         <p>
                           Estado de entrega:{" "}
                           {envio.estado_entrega}
                         </p>
 
+
                         <p>
                           Estado de pago:{" "}
                           {envio.estado_pago}
                         </p>
 
+
                         <p>
                           Total: $
                           {envio.monto_total}
                         </p>
+
 
                         <p>
                           Pagado: $
@@ -260,6 +328,7 @@ function ViajesClientes({
                         </p>
 
                       </article>
+
                     );
 
                   }
@@ -268,13 +337,17 @@ function ViajesClientes({
               </div>
 
             </article>
+
           );
 
         }
       )}
 
     </section>
+
   );
+
 }
+
 
 export default ViajesClientes;
