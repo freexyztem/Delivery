@@ -1,8 +1,19 @@
 import Producto from "./Producto";
+import obtenerViajesClientes from '../Services/api';
 
-export default function ViajesClientes() {
+interface ViajesClientesProps {
+  accessToken: string;
+}
+
+export default function ViajesClientes({ accessToken }: ViajesClientesProps) {
   const moneda = "USD";
   const cambio = 1.2;
+  const datos = async () => {
+    const viajes = await obtenerViajesClientes(accessToken);
+    // Procesar los datos de los viajes
+  };
+
+  datos();
   return (
     <section>
       <h2><span className="material-symbols-outlined">travel</span><br />20-julio-2027</h2>

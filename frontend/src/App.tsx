@@ -3,22 +3,16 @@ import './App.css';
 import Login from './Components/Login';
 import GeneralHeader from './Components/GeneralHeader';
 import ViajesClientes from './Components/ViajesClientes';
-import ViajesStaff from './Components/ViajesClientes';
-import ViajesAdmin from './Components/ViajesClientes';
+import ViajesStaff from './Components/ViajesStaff';
+import ViajesAdmin from './Components/ViajesAdmin';
 import GeneralFooter from './Components/GeneralFooter';
 
 function App() {
   const [login, setLogin] = useState("");
-  const [tokens, setTokens] = useState({
-    accessToken: null,
-    refreshToken: null,
-  });
+  const [accessToken, setAccessToken] = useState("");
 
-  function handleLogin(accessToken, refreshToken) {
-    setTokens({
-      accessToken,
-      refreshToken,
-    });
+  function handleLogin(accessToken: string) {
+    setAccessToken(accessToken);
   }
   
   return (
@@ -26,9 +20,9 @@ function App() {
       <GeneralHeader/>
       <main>
         {(login === "" ) && <Login onLogin={handleLogin} />}
-        {(login === "cliente") && <ViajesClientes/>}
-        {(login === "admin") && <ViajesAdmin/>}
-        {(login === "staff") && <ViajesStaff/>}
+        {(login === "cliente") && <ViajesClientes accessToken={accessToken} />}
+        {(login === "admin") && <ViajesAdmin accessToken={accessToken} />}
+        {(login === "staff") && <ViajesStaff accessToken={accessToken} />}
       </main>
       <GeneralFooter/>
     </>

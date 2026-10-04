@@ -11,6 +11,7 @@ from .views import (
     ProductoViewSet,
     EnvioViewSet,
     MeView,
+    UsuarioActualView,
 )
 
 router = DefaultRouter()
@@ -34,4 +35,5 @@ router.register("envios", EnvioViewSet, basename="envios")
 urlpatterns = [
     path("", include(router.urls)),
     path("me/", MeView.as_view(), name="me"),
+    path("usuario/", UsuarioActualView.as_view(), name="usuario_actual"),
 ]

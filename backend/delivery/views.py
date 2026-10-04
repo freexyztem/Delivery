@@ -261,3 +261,28 @@ class MeView(APIView):
                 "tipo": "usuario",
             }
         )
+
+
+# ============================================================
+# Vista para verificar el tipo de Usuario
+# ============================================================
+class UsuarioActualView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        usuario = request.user
+
+        if usuario.is_superuser:
+            rol = "admin"
+        elif usuario.is_staff:
+            rol = "staff"
+        else:
+            rol = "cliente"
+
+        return Response(
+            {
+                "id": usuario.id,
+                "username": usuario.username,
+                "rol": rol,
+            }
+        )
