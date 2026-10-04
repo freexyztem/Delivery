@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import './App.css';
+
 import Login from './Components/Login';
 import GeneralHeader from './Components/GeneralHeader';
 import ViajesClientes from './Components/ViajesClientes';
 import ViajesStaff from './Components/ViajesStaff';
 import ViajesAdmin from './Components/ViajesAdmin';
 import GeneralFooter from './Components/GeneralFooter';
+import TipoUsuario from './Components/TipoUsuario';
 
 function App() {
   const [login, setLogin] = useState("");
@@ -15,31 +17,45 @@ function App() {
     setAccessToken(accessToken);
     setLogin("cargando");
   }
-  
+
+  function handleConnect(rol: string) {
+    setLogin(rol);
+  }
+
   return (
     <>
-      <GeneralHeader/>
+      <GeneralHeader />
+
       <main>
-        {(login === "" ) && <Login onLogin={handleLogin} />}
-        {(login === "cargando" ) && (<h1>Cargando...</h1>)}
-        {(login === "cliente") && <ViajesClientes accessToken={accessToken} />}
-        {(login === "admin") && <ViajesAdmin accessToken={accessToken} />}
-        {(login === "staff") && <ViajesStaff accessToken={accessToken} />}
+
+        {login === "" && (
+          <Login onLogin={handleLogin} />
+        )}
+
+        {login === "cargando" && (
+          <TipoUsuario
+            accessToken={accessToken}
+            onConnect={handleConnect}
+          />
+        )}
+
+        {login === "cliente" && (
+          <ViajesClientes accessToken={accessToken} />
+        )}
+
+        {login === "admin" && (
+          <ViajesAdmin accessToken={accessToken} />
+        )}
+
+        {login === "staff" && (
+          <ViajesStaff accessToken={accessToken} />
+        )}
+
       </main>
-      <GeneralFooter/>
+
+      <GeneralFooter />
     </>
- );
-};
+  );
+}
 
 export default App;
-
-
-/*
-
-fetch("http://localhost:8000/api/viajes/", {
-  headers: {
-    Authorization: `Bearer ${tokens.accessToken}`,
-  },
-});
-
-*/

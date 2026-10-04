@@ -3,7 +3,7 @@ import type { FormEvent } from "react";
 import { API_URL } from "../Services/api";
 
 interface LoginProps {
-    onLogin: (accessToken: string, refreshToken: string) => void;
+    onLogin: (accessToken: string) => void;
 }
 
 export default function Login({ onLogin }: LoginProps) {
@@ -14,7 +14,7 @@ export default function Login({ onLogin }: LoginProps) {
         e.preventDefault();
 
         try {
-            const response = await fetch(`${API_URL}/token/`, {
+            const response = await fetch(`${API_URL}token/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -31,9 +31,9 @@ export default function Login({ onLogin }: LoginProps) {
 
             const data = await response.json();
 
-            const { access, refresh } = data;
+            const { access } = data;
 
-            onLogin(access, refresh);
+            onLogin(access);
 
         } catch (error) {
             console.error(error);
