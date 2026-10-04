@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 from .models import (
     User,
@@ -16,7 +17,8 @@ from .models import (
 
 
 @admin.register(User)
-class UserAdmin(admin.ModelAdmin):
+class UserAdmin(BaseUserAdmin):
+    # class UserAdmin(admin.ModelAdmin):
 
     list_display = (
         "username",
