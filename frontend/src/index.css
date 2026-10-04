@@ -4,7 +4,7 @@
   --color-secundario: #eeeeee;
   --color-principal: black;
   --tamaño-texto: 18px;
-  --font-principal:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+  --font-principal: Calibri, 'Trebuchet MS', sans-serif;
 }
 body{
   background-color: var(--color-principal);
