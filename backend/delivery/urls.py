@@ -5,7 +5,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     UserViewSet,
     TarifaViewSet,
-    ClienteViewSet,
+    # ClienteViewSet,
     ViajeViewSet,
     StaffViewSet,
     ProductoViewSet,
@@ -21,7 +21,7 @@ router.register("usuarios", UserViewSet, basename="usuarios")
 
 router.register("tarifas", TarifaViewSet, basename="tarifas")
 
-router.register("clientes", ClienteViewSet, basename="clientes")
+# router.register("clientes", ClienteViewSet, basename="clientes")
 
 router.register("viajes", ViajeViewSet, basename="viajes")
 

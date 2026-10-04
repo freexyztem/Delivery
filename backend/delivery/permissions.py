@@ -32,7 +32,10 @@ class EsStaff(BasePermission):
         if viaje is None:
             return False
 
-        return StaffViaje.objects.filter(viaje=viaje, usuario=request.user).exists()
+        return StaffViaje.objects.filter(
+            viaje=viaje,
+            usuario=request.user,
+        ).exists()
 
 
 class EsRepartidorDelViaje(BasePermission):
@@ -55,27 +58,36 @@ class EsRepartidorDelViaje(BasePermission):
             return False
 
         return StaffViaje.objects.filter(
-            viaje=viaje, usuario=request.user, rol=StaffViaje.Rol.REPARTIDOR
+            viaje=viaje,
+            usuario=request.user,
+            rol=StaffViaje.Rol.REPARTIDOR,
         ).exists()
 
 
 class EsCliente(BasePermission):
     """
-    Comprueba que el usuario sea cliente.
+    Comprueba que el usuario sea un cliente.
+
+    En el nuevo modelo no existe Cliente.
+    Todo usuario que no sea staff ni superusuario
+    se considera cliente.
     """
 
     def has_permission(self, request, view):
         return (
             request.user
             and request.user.is_authenticated
-            and hasattr(request.user, "cliente")
+            and not request.user.is_staff
+            and not request.user.is_superuser
+            and request.user.is_active
         )
 
     def has_object_permission(self, request, view, obj):
-        return (
-            hasattr(request.user, "cliente")
-            and obj.producto.cliente.usuario_id == request.user.id
-        )
+
+        if not self.has_permission(request, view):
+            return False
+
+        return obj.producto.cliente_id == request.user.id
 
 
 class EsPropietarioDelEnvio(BasePermission):
@@ -84,12 +96,16 @@ class EsPropietarioDelEnvio(BasePermission):
     al cliente autenticado.
     """
 
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated
+
     def has_object_permission(self, request, view, obj):
 
         if request.user.is_superuser:
             return True
 
         return (
-            hasattr(request.user, "cliente")
-            and obj.producto.cliente.usuario_id == request.user.id
+            not request.user.is_staff
+            and request.user.is_active
+            and obj.producto.cliente_id == request.user.id
         )

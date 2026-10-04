@@ -5,7 +5,6 @@ from rest_framework import serializers
 
 from .models import (
     Tarifa,
-    Cliente,
     Viaje,
     StaffViaje,
     Producto,
@@ -77,29 +76,6 @@ class TarifaSerializer(serializers.ModelSerializer):
 
 
 # ============================================================
-# CLIENTE
-# ============================================================
-
-
-class ClienteSerializer(serializers.ModelSerializer):
-
-    usuario = UserSerializer()
-
-    class Meta:
-        model = Cliente
-
-        fields = [
-            "id",
-            "usuario",
-            "activo",
-        ]
-
-        read_only_fields = [
-            "id",
-        ]
-
-
-# ============================================================
 # VIAJE
 # ============================================================
 
@@ -107,18 +83,28 @@ class ClienteSerializer(serializers.ModelSerializer):
 class ViajeSerializer(serializers.ModelSerializer):
 
     peso_total = serializers.DecimalField(
-        max_digits=12, decimal_places=2, read_only=True
+        max_digits=12,
+        decimal_places=2,
+        read_only=True,
     )
 
     ingresos_totales = serializers.DecimalField(
-        max_digits=12, decimal_places=2, read_only=True
+        max_digits=12,
+        decimal_places=2,
+        read_only=True,
     )
 
     gastos_totales = serializers.DecimalField(
-        max_digits=12, decimal_places=2, read_only=True
+        max_digits=12,
+        decimal_places=2,
+        read_only=True,
     )
 
-    ganancia = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    ganancia = serializers.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        read_only=True,
+    )
 
     class Meta:
         model = Viaje
@@ -198,7 +184,10 @@ class ProductoSerializer(serializers.ModelSerializer):
 
 class EnvioSerializer(serializers.ModelSerializer):
 
-    cliente = serializers.IntegerField(source="producto.cliente_id", read_only=True)
+    cliente = serializers.IntegerField(
+        source="producto.cliente_id",
+        read_only=True,
+    )
 
     class Meta:
         model = Envio
@@ -235,28 +224,46 @@ class EnvioSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
 
-        viaje = attrs.get("viaje", getattr(self.instance, "viaje", None))
+        viaje = attrs.get(
+            "viaje",
+            getattr(self.instance, "viaje", None),
+        )
 
-        producto = attrs.get("producto", getattr(self.instance, "producto", None))
+        producto = attrs.get(
+            "producto",
+            getattr(self.instance, "producto", None),
+        )
 
         if not viaje or not producto:
             return attrs
 
-        if not producto.cliente.activo:
+        # User.is_active reemplaza al antiguo Cliente.activo
+        if not producto.cliente.is_active:
             raise serializers.ValidationError("El cliente está inactivo.")
 
-        peso = attrs.get("peso", getattr(self.instance, "peso", None))
+        peso = attrs.get(
+            "peso",
+            getattr(self.instance, "peso", None),
+        )
 
         if peso is not None and peso <= Decimal("0.00"):
             raise serializers.ValidationError("El peso debe ser mayor que cero.")
 
-        tarifa = attrs.get("tarifa", getattr(self.instance, "tarifa", None))
+        tarifa = attrs.get(
+            "tarifa",
+            getattr(self.instance, "tarifa", None),
+        )
 
         if tarifa and not tarifa.activa:
             raise serializers.ValidationError("La tarifa seleccionada está inactiva.")
 
         precio_fijo = attrs.get(
-            "precio_fijo", getattr(self.instance, "precio_fijo", Decimal("0.00"))
+            "precio_fijo",
+            getattr(
+                self.instance,
+                "precio_fijo",
+                Decimal("0.00"),
+            ),
         )
 
         if producto.categoria == Producto.Categoria.ELECTRONICO:
@@ -271,11 +278,16 @@ class EnvioSerializer(serializers.ModelSerializer):
 
             if precio_fijo != Decimal("0.00"):
                 raise serializers.ValidationError(
-                    "Los productos regulares no utilizan " "precio fijo."
+                    "Los productos regulares no utilizan precio fijo."
                 )
 
         extra_fee = attrs.get(
-            "extra_fee", getattr(self.instance, "extra_fee", Decimal("0.00"))
+            "extra_fee",
+            getattr(
+                self.instance,
+                "extra_fee",
+                Decimal("0.00"),
+            ),
         )
 
         if extra_fee < Decimal("0.00"):

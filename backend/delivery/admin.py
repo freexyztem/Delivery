@@ -4,7 +4,6 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import (
     User,
     Tarifa,
-    Cliente,
     Viaje,
     StaffViaje,
     Producto,
@@ -18,7 +17,6 @@ from .models import (
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    # class UserAdmin(admin.ModelAdmin):
 
     list_display = (
         "username",
@@ -65,30 +63,6 @@ class TarifaAdmin(admin.ModelAdmin):
 
 
 # ============================================================
-# CLIENTE
-# ============================================================
-
-
-@admin.register(Cliente)
-class ClienteAdmin(admin.ModelAdmin):
-
-    list_display = (
-        "id",
-        "usuario",
-        "activo",
-    )
-
-    list_filter = ("activo",)
-
-    search_fields = (
-        "usuario__username",
-        "usuario__first_name",
-        "usuario__last_name",
-        "usuario__email",
-    )
-
-
-# ============================================================
 # VIAJE
 # ============================================================
 
@@ -107,7 +81,7 @@ class ViajeAdmin(admin.ModelAdmin):
 
 
 # ============================================================
-# Staff
+# STAFF
 # ============================================================
 
 
@@ -159,9 +133,10 @@ class ProductoAdmin(admin.ModelAdmin):
 
     search_fields = (
         "nombre",
-        "cliente__usuario__username",
-        "cliente__usuario__first_name",
-        "cliente__usuario__last_name",
+        "cliente__username",
+        "cliente__first_name",
+        "cliente__last_name",
+        "cliente__email",
     )
 
 
@@ -196,7 +171,10 @@ class EnvioAdmin(admin.ModelAdmin):
     search_fields = (
         "sku",
         "producto__nombre",
-        "producto__cliente__usuario__username",
+        "producto__cliente__username",
+        "producto__cliente__first_name",
+        "producto__cliente__last_name",
+        "producto__cliente__email",
     )
 
     readonly_fields = (

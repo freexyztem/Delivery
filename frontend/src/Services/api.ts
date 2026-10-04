@@ -1,11 +1,15 @@
-export const API_URL = "https://delivery-r9p0.onrender.com/api/token/";
+export const API_URL = "https://delivery-r9p0.onrender.com/api/";
 
-export default async function obtenerViajesClientes(accessToken) {
+interface obtenerViajesClientesProps {
+  accessToken: string;
+}
+
+export default async function obtenerViajesClientes({ accessToken }: obtenerViajesClientesProps) {
   const response = await fetch(
-    "http://localhost:8000/api/viajes/",
+    `${API_URL}viajes/`,
     {
       headers: {
-        Authorization: `Bearer ${tokens.accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
       },
     }
   );
@@ -14,7 +18,7 @@ export default async function obtenerViajesClientes(accessToken) {
     const nuevoAccessToken = await refreshAccessToken();
 
     const retry = await fetch(
-      "http://localhost:8000/api/viajes/",
+      `${API_URL}token/refresh/`,
       {
         headers: {
           Authorization: `Bearer ${nuevoAccessToken}`,
@@ -26,4 +30,8 @@ export default async function obtenerViajesClientes(accessToken) {
   }
 
   return response.json();
+}
+
+function refreshAccessToken() {
+  // Implementation for refreshing access token
 }

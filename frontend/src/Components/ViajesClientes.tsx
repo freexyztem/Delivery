@@ -10,7 +10,9 @@ export default function ViajesClientes({ accessToken }: ViajesClientesProps) {
   const cambio = 1.2;
   const datos = async () => {
     const viajes = await obtenerViajesClientes(accessToken);
-    // Procesar los datos de los viajes
+    // ACCEDER A LOS ENDPOINTS DE: ENVIOS, VIAJES, PRODUCTOS 
+    // ELIMINAR EL ACCESOS A VER OTROS USUARIOS y CLIENTES desde "api/clientes/" "api/usuarios/"
+    // 
   };
 
   datos();

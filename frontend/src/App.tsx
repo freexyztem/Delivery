@@ -13,6 +13,7 @@ function App() {
 
   function handleLogin(accessToken: string) {
     setAccessToken(accessToken);
+    setLogin("cargando");
   }
   
   return (
@@ -20,6 +21,7 @@ function App() {
       <GeneralHeader/>
       <main>
         {(login === "" ) && <Login onLogin={handleLogin} />}
+        {(login === "cargando" ) && (<h1>Cargando...</h1>)}
         {(login === "cliente") && <ViajesClientes accessToken={accessToken} />}
         {(login === "admin") && <ViajesAdmin accessToken={accessToken} />}
         {(login === "staff") && <ViajesStaff accessToken={accessToken} />}

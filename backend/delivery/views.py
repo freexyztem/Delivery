@@ -1,12 +1,17 @@
-from django.shortcuts import render
-
-# Create your views here.
 from rest_framework.views import APIView
 from rest_framework.response import Response
-
-from .models import StaffViaje
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
+
+from django.contrib.auth import get_user_model
+
+from .models import (
+    StaffViaje,
+    Tarifa,
+    Viaje,
+    Producto,
+    Envio,
+)
 
 from .permissions import (
     EsAdministrador,
@@ -16,24 +21,11 @@ from .permissions import (
     EsPropietarioDelEnvio,
 )
 
-from django.contrib.auth import get_user_model
-
-from .models import (
-    StaffViaje,
-    Tarifa,
-    Cliente,
-    Viaje,
-    Producto,
-    Envio,
-)
-
 from .serializers import (
     StaffSerializer,
     UserSerializer,
     TarifaSerializer,
-    ClienteSerializer,
     ViajeSerializer,
-    StaffSerializer,
     ProductoSerializer,
     EnvioSerializer,
 )
@@ -52,7 +44,8 @@ class UserViewSet(viewsets.ModelViewSet):
 
     serializer_class = UserSerializer
 
-    permission_classes = [IsAuthenticated]
+    # Solo el administrador puede acceder a /usuarios/
+    permission_classes = [EsAdministrador]
 
 
 # ============================================================
@@ -65,20 +58,6 @@ class TarifaViewSet(viewsets.ModelViewSet):
     queryset = Tarifa.objects.all()
 
     serializer_class = TarifaSerializer
-
-    permission_classes = [IsAuthenticated]
-
-
-# ============================================================
-# CLIENTES
-# ============================================================
-
-
-class ClienteViewSet(viewsets.ModelViewSet):
-
-    queryset = Cliente.objects.select_related("usuario").all()
-
-    serializer_class = ClienteSerializer
 
     permission_classes = [IsAuthenticated]
 
@@ -104,7 +83,10 @@ class ViajeViewSet(viewsets.ModelViewSet):
 
 class StaffViewSet(viewsets.ModelViewSet):
 
-    queryset = StaffViaje.objects.select_related("viaje", "usuario").all()
+    queryset = StaffViaje.objects.select_related(
+        "viaje",
+        "usuario",
+    ).all()
 
     serializer_class = StaffSerializer
 
@@ -118,7 +100,9 @@ class StaffViewSet(viewsets.ModelViewSet):
 
 class ProductoViewSet(viewsets.ModelViewSet):
 
-    queryset = Producto.objects.select_related("cliente", "cliente__usuario").all()
+    queryset = Producto.objects.select_related(
+        "cliente",
+    ).all()
 
     serializer_class = ProductoSerializer
 
@@ -131,11 +115,11 @@ class ProductoViewSet(viewsets.ModelViewSet):
 
 
 class EnvioViewSet(viewsets.ModelViewSet):
+
     queryset = Envio.objects.select_related(
         "viaje",
         "producto",
         "producto__cliente",
-        "producto__cliente__usuario",
     ).all()
 
     serializer_class = EnvioSerializer
@@ -146,15 +130,12 @@ class EnvioViewSet(viewsets.ModelViewSet):
         if self.request.user.is_superuser:
             return [EsAdministrador()]
 
-        # CLIENTE
-        if hasattr(self.request.user, "cliente"):
-            return [EsCliente()]
-
         # STAFF
-        if StaffViaje.objects.filter(usuario=self.request.user).exists():
+        if self.request.user.is_staff:
             return [EsStaff()]
 
-        return [IsAuthenticated()]
+        # CLIENTE
+        return [EsCliente()]
 
     def get_queryset(self):
 
@@ -165,12 +146,13 @@ class EnvioViewSet(viewsets.ModelViewSet):
             return self.queryset
 
         # CLIENTE
-        if hasattr(user, "cliente"):
-            return self.queryset.filter(producto__cliente__usuario=user)
+        if not user.is_staff:
+            return self.queryset.filter(producto__cliente=user)
 
         # STAFF
         viajes_staff = StaffViaje.objects.filter(usuario=user).values_list(
-            "viaje_id", flat=True
+            "viaje_id",
+            flat=True,
         )
 
         return self.queryset.filter(viaje_id__in=viajes_staff)
@@ -206,14 +188,22 @@ class EnvioViewSet(viewsets.ModelViewSet):
 # ============================================================
 # ME
 # ============================================================
+
+
 class MeView(APIView):
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+
         user = request.user
 
-        # Superusuario
+        # ====================================================
+        # SUPERUSUARIO
+        # ====================================================
+
         if user.is_superuser:
+
             return Response(
                 {
                     "id": user.id,
@@ -222,21 +212,14 @@ class MeView(APIView):
                 }
             )
 
-        # Usuario que tiene relación con Cliente
-        if hasattr(user, "cliente"):
-            return Response(
-                {
-                    "id": user.id,
-                    "username": user.username,
-                    "tipo": "cliente",
-                    "cliente_id": user.cliente.id,
-                }
-            )
+        # ====================================================
+        # STAFF
+        # ====================================================
 
-        # Usuario que pertenece a Staff
-        staff = StaffViaje.objects.filter(usuario=user).select_related("viaje")
+        if user.is_staff:
 
-        if staff.exists():
+            staff = StaffViaje.objects.filter(usuario=user).select_related("viaje")
+
             return Response(
                 {
                     "id": user.id,
@@ -253,30 +236,42 @@ class MeView(APIView):
                 }
             )
 
-        # Usuario autenticado pero sin relación definida
+        # ====================================================
+        # CLIENTE
+        # ====================================================
+
         return Response(
             {
                 "id": user.id,
                 "username": user.username,
-                "tipo": "usuario",
+                "tipo": "cliente",
             }
         )
 
 
 # ============================================================
-# Vista para verificar el tipo de Usuario
+# USUARIO ACTUAL
 # ============================================================
+
+
 class UsuarioActualView(APIView):
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+
         usuario = request.user
 
         if usuario.is_superuser:
+
             rol = "admin"
+
         elif usuario.is_staff:
+
             rol = "staff"
+
         else:
+
             rol = "cliente"
 
         return Response(

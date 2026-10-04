@@ -12,7 +12,10 @@ from django.db import models
 class Tarifa(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
 
-    precio_por_libra = models.DecimalField(max_digits=10, decimal_places=2)
+    precio_por_libra = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+    )
 
     activa = models.BooleanField(default=True)
 
@@ -32,14 +35,16 @@ class Tarifa(models.Model):
 
 class User(AbstractUser):
 
-    telefono = models.CharField(max_length=30, blank=True)
+    telefono = models.CharField(
+        max_length=30,
+        blank=True,
+    )
 
     # Última tarifa utilizada por el usuario.
     #
-    # IMPORTANTE:
-    # Esto NO representa el historial de tarifas.
-    # Solo sirve para sugerir una tarifa cuando se
-    # agregue nuevamente al cliente a un viaje.
+    # NO representa historial.
+    # Solo sirve para sugerir una tarifa cuando
+    # se agregue nuevamente al cliente a un viaje.
     ultima_tarifa = models.ForeignKey(
         Tarifa,
         on_delete=models.PROTECT,
@@ -57,38 +62,22 @@ class User(AbstractUser):
 
 
 # ============================================================
-# CLIENTE
-# ============================================================
-
-
-class Cliente(models.Model):
-
-    usuario = models.OneToOneField(
-        User, on_delete=models.PROTECT, related_name="cliente"
-    )
-
-    activo = models.BooleanField(default=True)
-
-    class Meta:
-        verbose_name = "Cliente"
-        verbose_name_plural = "Clientes"
-
-    def __str__(self):
-        return self.usuario.get_full_name() or self.usuario.username
-
-
-# ============================================================
 # VIAJE
 # ============================================================
 
 
 class Viaje(models.Model):
 
-    nombre = models.CharField(max_length=150, blank=True)
+    nombre = models.CharField(
+        max_length=150,
+        blank=True,
+    )
 
     fecha = models.DateField()
 
-    creado_en = models.DateTimeField(auto_now_add=True)
+    creado_en = models.DateTimeField(
+        auto_now_add=True,
+    )
 
     class Meta:
         verbose_name = "Viaje"
@@ -115,7 +104,10 @@ class Viaje(models.Model):
         su peso SI cuenta para el peso total del viaje.
         """
 
-        return sum((envio.peso for envio in self.envios.all()), Decimal("0.00"))
+        return sum(
+            (envio.peso for envio in self.envios.all()),
+            Decimal("0.00"),
+        )
 
     @property
     def ingresos_totales(self):
@@ -123,7 +115,10 @@ class Viaje(models.Model):
         Total cobrado a los clientes en este viaje.
         """
 
-        return sum((envio.monto_total for envio in self.envios.all()), Decimal("0.00"))
+        return sum(
+            (envio.monto_total for envio in self.envios.all()),
+            Decimal("0.00"),
+        )
 
     @property
     def gastos_totales(self):
@@ -133,7 +128,8 @@ class Viaje(models.Model):
         """
 
         return sum(
-            (envio.gastos_empresa for envio in self.envios.all()), Decimal("0.00")
+            (envio.gastos_empresa for envio in self.envios.all()),
+            Decimal("0.00"),
         )
 
     @property
@@ -146,7 +142,7 @@ class Viaje(models.Model):
 
 
 # ============================================================
-# Staff del Viaje
+# STAFF DEL VIAJE
 # ============================================================
 
 
@@ -158,13 +154,22 @@ class StaffViaje(models.Model):
         DISTRIBUIDOR = "DISTRIBUIDOR", "Distribuidor"
         REPARTIDOR = "REPARTIDOR", "Repartidor"
 
-    viaje = models.ForeignKey(Viaje, on_delete=models.PROTECT, related_name="staff")
-
-    usuario = models.ForeignKey(
-        User, on_delete=models.PROTECT, related_name="staff_viajes"
+    viaje = models.ForeignKey(
+        Viaje,
+        on_delete=models.PROTECT,
+        related_name="staff",
     )
 
-    rol = models.CharField(max_length=20, choices=Rol.choices)
+    usuario = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        related_name="staff_viajes",
+    )
+
+    rol = models.CharField(
+        max_length=20,
+        choices=Rol.choices,
+    )
 
     class Meta:
         verbose_name = "Staff del Viaje"
@@ -172,12 +177,13 @@ class StaffViaje(models.Model):
 
         constraints = [
             models.UniqueConstraint(
-                fields=["viaje", "usuario", "rol"], name="unique_usuario_rol_viaje"
+                fields=["viaje", "usuario", "rol"],
+                name="unique_usuario_rol_viaje",
             )
         ]
 
     def __str__(self):
-        return f"{self.usuario} - " f"{self.rol} - " f"{self.viaje}"
+        return f"{self.usuario} - {self.rol} - {self.viaje}"
 
 
 # ============================================================
@@ -191,19 +197,32 @@ class Producto(models.Model):
         REGULAR = "REGULAR", "Regular"
         ELECTRONICO = "ELECTRONICO", "Electrónico"
 
-    nombre = models.CharField(max_length=200)
-
-    cliente = models.ForeignKey(
-        Cliente, on_delete=models.PROTECT, related_name="productos"
+    nombre = models.CharField(
+        max_length=200,
     )
 
-    descripcion = models.TextField(blank=True)
+    # El cliente ahora es directamente un User.
+    #
+    # Ya no existe el modelo Cliente.
+    cliente = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        related_name="productos",
+    )
+
+    descripcion = models.TextField(
+        blank=True,
+    )
 
     categoria = models.CharField(
-        max_length=20, choices=Categoria.choices, default=Categoria.REGULAR
+        max_length=20,
+        choices=Categoria.choices,
+        default=Categoria.REGULAR,
     )
 
-    creado_en = models.DateTimeField(auto_now_add=True)
+    creado_en = models.DateTimeField(
+        auto_now_add=True,
+    )
 
     class Meta:
         verbose_name = "Producto"
@@ -211,7 +230,7 @@ class Producto(models.Model):
         ordering = ["-id"]
 
     def __str__(self):
-        return f"{self.nombre} - " f"{self.cliente}"
+        return f"{self.nombre} - {self.cliente}"
 
 
 # ============================================================
@@ -245,69 +264,69 @@ class Envio(models.Model):
     # RELACIONES
     # --------------------------------------------------------
 
-    viaje = models.ForeignKey(Viaje, on_delete=models.PROTECT, related_name="envios")
+    viaje = models.ForeignKey(
+        Viaje,
+        on_delete=models.PROTECT,
+        related_name="envios",
+    )
 
     producto = models.ForeignKey(
-        Producto, on_delete=models.PROTECT, related_name="envios"
+        Producto,
+        on_delete=models.PROTECT,
+        related_name="envios",
     )
-    tarifa = models.ForeignKey(Tarifa, on_delete=models.PROTECT, related_name="envios")
+
+    tarifa = models.ForeignKey(
+        Tarifa,
+        on_delete=models.PROTECT,
+        related_name="envios",
+    )
+
     # --------------------------------------------------------
     # IDENTIFICACIÓN
     # --------------------------------------------------------
 
-    # El SKU pertenece al envío.
-    #
-    # El mismo producto puede tener diferentes SKU
-    # en diferentes viajes.
     sku = models.CharField(
         max_length=50,
         unique=True,
         editable=False,
     )
 
-    # Token único utilizado para identificar
-    # este envío mediante QR.
-    qr_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    qr_token = models.UUIDField(
+        default=uuid.uuid4,
+        unique=True,
+        editable=False,
+    )
 
     # --------------------------------------------------------
     # INFORMACIÓN DEL PRODUCTO EN ESTE VIAJE
     # --------------------------------------------------------
 
-    # Este peso pertenece al envío.
-    #
-    # Puede cambiar de un viaje a otro.
-    peso = models.DecimalField(max_digits=10, decimal_places=2)
-
-    # Gasto particular de la empresa
-    # para este envío en este viaje.
-    gastos_empresa = models.DecimalField(
-        max_digits=10, decimal_places=2, default=Decimal("0.00")
+    peso = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
     )
 
-    # Cargo adicional del envío.
-    #
-    # Ejemplos:
-    # - Personal shopper
-    # - Uso de tarjeta
-    # - Servicio adicional
+    gastos_empresa = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal("0.00"),
+    )
+
     extra_fee = models.DecimalField(
-        max_digits=10, decimal_places=2, default=Decimal("0.00")
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal("0.00"),
     )
 
     # --------------------------------------------------------
     # PRECIO FIJO PARA ELECTRÓNICOS
     # --------------------------------------------------------
 
-    # Para productos ELECTRÓNICOS:
-    #
-    #     monto = precio_fijo + extra_fee
-    #
-    # El peso NO participa en el cálculo del precio,
-    # pero SI cuenta para el peso total del viaje.
-    #
-    # Para productos REGULARES este campo puede ser 0.
     precio_fijo = models.DecimalField(
-        max_digits=10, decimal_places=2, default=Decimal("0.00")
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal("0.00"),
     )
 
     # --------------------------------------------------------
@@ -315,11 +334,15 @@ class Envio(models.Model):
     # --------------------------------------------------------
 
     estado_entrega = models.CharField(
-        max_length=20, choices=EstadoEntrega.choices, default=EstadoEntrega.PENDIENTE
+        max_length=20,
+        choices=EstadoEntrega.choices,
+        default=EstadoEntrega.PENDIENTE,
     )
 
     estado_pago = models.CharField(
-        max_length=20, choices=EstadoPago.choices, default=EstadoPago.PENDIENTE
+        max_length=20,
+        choices=EstadoPago.choices,
+        default=EstadoPago.PENDIENTE,
     )
 
     # --------------------------------------------------------
@@ -327,20 +350,28 @@ class Envio(models.Model):
     # --------------------------------------------------------
 
     monto_total = models.DecimalField(
-        max_digits=10, decimal_places=2, default=Decimal("0.00")
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal("0.00"),
     )
 
     monto_pagado = models.DecimalField(
-        max_digits=10, decimal_places=2, default=Decimal("0.00")
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal("0.00"),
     )
 
     # --------------------------------------------------------
     # FECHAS
     # --------------------------------------------------------
 
-    creado_en = models.DateTimeField(auto_now_add=True)
+    creado_en = models.DateTimeField(
+        auto_now_add=True,
+    )
 
-    actualizado_en = models.DateTimeField(auto_now=True)
+    actualizado_en = models.DateTimeField(
+        auto_now=True,
+    )
 
     class Meta:
         verbose_name = "Envío"
@@ -348,19 +379,22 @@ class Envio(models.Model):
 
         constraints = [
             models.UniqueConstraint(
-                fields=["viaje", "producto"], name="unique_producto_por_viaje"
+                fields=["viaje", "producto"],
+                name="unique_producto_por_viaje",
             )
         ]
 
         ordering = ["-id"]
 
     def __str__(self):
-        return f"{self.sku} - " f"{self.producto.nombre}"
+        return f"{self.sku} - {self.producto.nombre}"
 
     def save(self, *args, **kwargs):
+
         if not self.sku:
+
             # Primero necesitamos el ID del envío.
-            # Usamos temporalmente un SKU único para poder guardar.
+            # Usamos temporalmente un SKU único.
             self.sku = f"TEMP-{uuid.uuid4()}"
 
             super().save(*args, **kwargs)
